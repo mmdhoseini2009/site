@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بازی مار پیشرفته</title>
+    <style>
+        /* استایل‌های کلی */
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #1a1a1a;
+            font-family: Arial, sans-serif;
+            color: #fff;
+            flex-direction: column;
+        }
+
+        #game {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            background-color: #2c3e50;
+            border: 2px solid #34495e;
+            display: grid;
+            grid-template-columns: repeat(20, 1fr);
+            grid-template-rows: repeat(20, 1fr);
+        }
+
+        .snake {
+            background-color: #27ae60;
+            border: 1px solid #2c3e50;
+        }
+
+        .star {
+            background-color: #f1c40f;
+            border-radius: 50%;
+        }
+
+        .special-star {
+            background-color: #e74c3c;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        #score {
+            margin-top: 20px;
+            font-size: 20px;
+        }
+
+        #game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 30px;
+            display: none;
+        }
+
+        #restartButton {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: grid;
+            grid-template-areas:
+                ". up ."
+                "left down right";
+            gap: 10px;
+        }
+
+        .controls button {
+            padding: 15px;
+            font-size: 16px;
+            background-color: #34495e;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .controls button:active {
+            background-color: #2c3e50;
+        }
+
+        #up { grid-area: up; }
+        #down { grid-area: down; }
+        #left { grid-area: left; }
+        #right { grid-area: right; }
+
+        #speedControl {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #8e44ad;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="game"></div>
+    <div id="score">امتیاز: 0</div>
+    <div id="game-over">بازی تمام شد!</div>
+    <button id="restartButton">دوباره شروع کن</button>
+    <button id="speedControl">تنظیم سرعت</button>
+    <div class="controls">
+        <button id="up">⬆️</button>
+        <button id="left">⬅️</button>
+        <button id="down">⬇️</button>
+        <button id="right">➡️</button>
+    </div>
+
+    <script>
+        // تنظیمات بازی
+        const game = document.getElementById('game');
+        const scoreDisplay = document.getElementById('score');
+        const gameOverDisplay = document.getElementById('game-over');
+        const restartButton = document.getElementById('restartButton');
+        const speedControl = document.getElementById('speedControl');
+
+        let snake = [{ x: 10, y: 10 }]; // موقعیت اولیه مار
+        let direction = { x: 0, y: 0 }; // جهت حرکت مار
+        let star = { x: 5, y: 5 }; // موقعیت ستاره
+        let specialStar = null; // موقعیت ستاره ویژه
+        let score = 0;
+        let gameOver = false;
+        let speed = 200; // سرعت اولیه مار
+        let interval;
+
+        // ایجاد ستاره
+        function createStar() {
+            star.x = Math.floor(Math.random() * 20);
+            star.y = Math.floor(Math.random() * 20);
+        }
+
+        // ایجاد ستاره ویژه
+        function createSpecialStar() {
+            if (specialStar) return; // اگر ستاره ویژه وجود دارد، جدید ایجاد نکن
+            specialStar = {
+                x: Math.floor(Math.random() * 20),
+                y: Math.floor(Math.random() * 20),
+                endTime: Date.now() + 5000 // 5 ثانیه بعد
+            };
+            setTimeout(() => {
+                specialStar = null; // ستاره ویژه را حذف کن
+                renderGame(); // بازی را دوباره رندر کن
+            }, 5000);
+        }
+
+        // تشخیص برخورد
+        function checkCollision() {
+            // برخورد با خود مار
+            for (let i = 1; i < snake.length; i++) {
+                if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // حرکت مار
+        function moveSnake() {
+            if (gameOver) return;
+
+            const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
+
+            // عبور از دیوار
+            if (head.x < 0) head.x = 19;
+            if (head.x >= 20) head.x = 0;
+            if (head.y < 0) head.y = 19;
+            if (head.y >= 20) head.y = 0;
+
+            snake.unshift(head);
+
+            // اگر ستاره خورده شد
+            if (head.x === star.x && head.y === star.y) {
+                score++;
+                scoreDisplay.textContent = `امتیاز: ${score}`;
+                createStar();
+            } else if (specialStar && head.x === specialStar.x && head.y === specialStar.y) {
+                score += 10;
+                scoreDisplay.textContent = `امتیاز: ${score}`;
+                specialStar = null;
+            } else {
+                snake.pop();
+            }
+
+            // بررسی برخورد
+            if (checkCollision()) {
+                gameOver = true;
+                gameOverDisplay.style.display = 'block';
+                restartButton.style.display = 'block';
+                clearInterval(interval);
+            }
+
+            renderGame();
+        }
+
+        // رندر بازی
+        function renderGame() {
+            game.innerHTML = '';
+            snake.forEach((segment, index) => {
+                const snakeElement = document.createElement('div');
+                snakeElement.classList.add('snake');
+                snakeElement.style.gridColumnStart = segment.x + 1;
+                snakeElement.style.gridRowStart = segment.y + 1;
+                game.appendChild(snakeElement);
+            });
+
+            const starElement = document.createElement('div');
+            starElement.classList.add('star');
+            starElement.style.gridColumnStart = star.x + 1;
+            starElement.style.gridRowStart = star.y + 1;
+            game.appendChild(starElement);
+
+            if (specialStar) {
+                const specialStarElement = document.createElement('div');
+                specialStarElement.classList.add('special-star');
+                specialStarElement.style.gridColumnStart = specialStar.x + 1;
+                specialStarElement.style.gridRowStart = specialStar.y + 1;
+                game.appendChild(specialStarElement);
+            }
+        }
+
+        // کنترل‌ها
+        document.getElementById('up').addEventListener('click', () => {
+            if (direction.y === 0) direction = { x: 0, y: -1 };
+        });
+        document.getElementById('down').addEventListener('click', () => {
+            if (direction.y === 0) direction = { x: 0, y: 1 };
+        });
+        document.getElementById('left').addEventListener('click', () => {
+            if (direction.x === 0) direction = { x: -1, y: 0 };
+        });
+        document.getElementById('right').addEventListener('click', () => {
+            if (direction.x === 0) direction = { x: 1, y: 0 };
+        });
+
+        // ریست بازی
+        restartButton.addEventListener('click', () => {
+            snake = [{ x: 10, y: 10 }];
+            direction = { x: 0, y: 0 };
+            score = 0;
+            scoreDisplay.textContent = `امتیاز: ${score}`;
+            gameOver = false;
+            gameOverDisplay.style.display = 'none';
+            restartButton.style.display = 'none';
+            createStar();
+            clearInterval(interval);
+            interval = setInterval(moveSnake, speed);
+        });
+
+        // تنظیم سرعت
+        speedControl.addEventListener('click', () => {
+            const newSpeed = prompt('سرعت مار را تنظیم کنید (عدد کمتر = سریع‌تر):', speed);
+            if (newSpeed && !isNaN(newSpeed)) {
+                speed = parseInt(newSpeed);
+                clearInterval(interval);
+                interval = setInterval(moveSnake, speed);
+            }
+        });
+
+        // شروع بازی
+        createStar();
+        interval = setInterval(moveSnake, speed);
+
+        // ایجاد ستاره ویژه هر 20 ثانیه
+        setInterval(createSpecialStar, 20000);
+    </script>
+</body>
+</html>
