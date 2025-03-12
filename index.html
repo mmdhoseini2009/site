@@ -2,26 +2,32 @@
 <html lang="fa">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
     <title>بازی مار پیشرفته</title>
     <style>
         /* استایل‌های کلی */
-        body {
+        html, body {
             margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden; /* جلوگیری از اسکرول */
+            touch-action: none; /* غیرفعال کردن زوم لمسی */
+        }
+
+        body {
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
             background-color: #1a1a1a;
             font-family: Arial, sans-serif;
             color: #fff;
             flex-direction: column;
         }
 
-                /* استایل برای container عکس */
+        /* استایل برای container عکس */
         .logo-container {
             position: absolute;
-            top: 20px;
+            top: 10px;
             left: 50%;
             transform: translateX(-50%);
             text-align: center;
@@ -29,8 +35,8 @@
 
         /* استایل برای عکس */
         .logo {
-            width: 45px; /* اندازه عرض عکس */
-            height: 45px; /* اندازه ارتفاع عکس */
+            width: 40px; /* اندازه عرض عکس */
+            height: 40px; /* اندازه ارتفاع عکس */
             border-radius: 50%; /* اگر می‌خوای عکس گرد باشه */
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); /* سایه برای عکس */
             transition: transform 0.3s ease; /* انیمیشن هنگام hover */
@@ -41,11 +47,12 @@
             transform: scale(1.1); /* بزرگ‌تر شدن عکس */
         }
 
-
         #game {
             position: relative;
-            width: 400px;
-            height: 400px;
+            width: 90vw; /* عرض بازی بر اساس عرض صفحه */
+            height: 90vw; /* ارتفاع بازی بر اساس عرض صفحه */
+            max-width: 400px; /* حداکثر اندازه برای صفحه‌های بزرگ */
+            max-height: 400px;
             background-color: #2c3e50;
             border: 2px solid #34495e;
             display: grid;
@@ -76,7 +83,7 @@
 
         #score {
             margin-top: 20px;
-            font-size: 20px;
+            font-size: 1.5rem; /* اندازه فونت نسبی */
         }
 
         #game-over {
@@ -84,14 +91,14 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 30px;
+            font-size: 2rem; /* اندازه فونت نسبی */
             display: none;
         }
 
         #restartButton {
             margin-top: 20px;
             padding: 10px 20px;
-            font-size: 16px;
+            font-size: 1rem;
             background-color: #3498db;
             color: #fff;
             border: none;
@@ -110,12 +117,12 @@
         }
 
         .controls button {
-            padding: 15px;
-            font-size: 16px;
+            padding: 20px; /* بزرگ‌تر کردن دکمه‌ها */
+            font-size: 1.2rem;
             background-color: #34495e;
             color: #fff;
             border: none;
-            border-radius: 5px;
+            border-radius: 10px; /* گوشه‌های گرد */
             cursor: pointer;
         }
 
@@ -131,7 +138,7 @@
         #speedControl {
             margin-top: 20px;
             padding: 10px 20px;
-            font-size: 16px;
+            font-size: 1rem;
             background-color: #8e44ad;
             color: #fff;
             border: none;
@@ -141,7 +148,7 @@
     </style>
 </head>
 <body>
-        <!-- عکس بالای صفحه -->
+    <!-- عکس بالای صفحه -->
     <div class="logo-container">
         <img src="https://s33.picofile.com/file/8483368568/1741771039690.png" alt="لوگو بازی" class="logo">
     </div>
@@ -313,6 +320,18 @@
 
         // ایجاد ستاره ویژه هر 20 ثانیه
         setInterval(createSpecialStar, 20000);
+
+        // جلوگیری از زوم با ژست‌های لمسی
+        document.addEventListener('gesturestart', function (e) {
+            e.preventDefault();
+        });
+
+        // جلوگیری از زوم با کلیدهای Ctrl + Scroll
+        document.addEventListener('wheel', function (e) {
+            if (e.ctrlKey) {
+                e.preventDefault();
+            }
+        }, { passive: false });
     </script>
 </body>
 </html>
