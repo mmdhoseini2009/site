@@ -10,8 +10,8 @@
             margin: 0;
             padding: 0;
             height: 100%;
-            overflow: hidden; /* جلوگیری از اسکرول */
-            touch-action: none; /* غیرفعال کردن زوم لمسی */
+            overflow: hidden;
+            touch-action: none;
         }
 
         body {
@@ -22,29 +22,6 @@
             font-family: Arial, sans-serif;
             color: #fff;
             flex-direction: column;
-        }
-
-        /* استایل برای container عکس */
-        .logo-container {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
-        }
-
-        /* استایل برای عکس */
-        .logo {
-            width: 40px; /* اندازه عرض عکس */
-            height: 40px; /* اندازه ارتفاع عکس */
-            border-radius: 50%; /* اگر می‌خوای عکس گرد باشه */
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); /* سایه برای عکس */
-            transition: transform 0.3s ease; /* انیمیشن هنگام hover */
-        }
-
-        /* انیمیشن هنگام hover روی عکس */
-        .logo:hover {
-            transform: scale(1.1); /* بزرگ‌تر شدن عکس */
         }
 
         #game {
@@ -83,20 +60,24 @@
 
         #score {
             margin-top: 20px;
-            font-size: 1.5rem; /* اندازه فونت نسبی */
+            font-size: 1.5rem;
         }
 
-        #game-over {
-            position: absolute;
+        .dialog {
+            display: none;
+            position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 2rem; /* اندازه فونت نسبی */
-            display: none;
+            background-color: #34495e;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 1000;
         }
 
-        #restartButton {
-            margin-top: 20px;
+        .dialog button {
+            margin-top: 10px;
             padding: 10px 20px;
             font-size: 1rem;
             background-color: #3498db;
@@ -104,7 +85,10 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            display: none;
+        }
+
+        .dialog button:hover {
+            background-color: #2980b9;
         }
 
         .controls {
@@ -117,12 +101,12 @@
         }
 
         .controls button {
-            padding: 20px; /* بزرگ‌تر کردن دکمه‌ها */
+            padding: 20px;
             font-size: 1.2rem;
             background-color: #34495e;
             color: #fff;
             border: none;
-            border-radius: 10px; /* گوشه‌های گرد */
+            border-radius: 10px;
             cursor: pointer;
         }
 
@@ -135,28 +119,28 @@
         #left { grid-area: left; }
         #right { grid-area: right; }
 
-        #speedControl {
-            margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 1rem;
-            background-color: #8e44ad;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+        /* کادر پایین صفحه */
+        .footer {
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        .footer img {
+            width: 20px; /* اندازه عرض لوگو */
+            height: 20px; /* اندازه ارتفاع لوگو */
+            border-radius: 50%;
         }
     </style>
 </head>
 <body>
-    <!-- عکس بالای صفحه -->
-    <div class="logo-container">
-        <img src="https://s33.picofile.com/file/8483368568/1741771039690.png" alt="لوگو بازی" class="logo">
-    </div>
     <div id="game"></div>
     <div id="score">امتیاز: 0</div>
-    <div id="game-over">بازی تمام شد!</div>
-    <button id="restartButton">دوباره شروع کن</button>
-    <button id="speedControl">تنظیم سرعت</button>
     <div class="controls">
         <button id="up">⬆️</button>
         <button id="left">⬅️</button>
@@ -164,21 +148,32 @@
         <button id="right">➡️</button>
     </div>
 
+    <!-- دیالوگ پایان بازی -->
+    <div id="gameOverDialog" class="dialog">
+        <div id="gameOverText">بازی تمام شد!</div>
+        <button id="restartButton">دوباره شروع کن</button>
+    </div>
+
+    <!-- کادر پایین صفحه -->
+    <div class="footer">
+        <img src="https://s33.picofile.com/file/8483368568/1741771039690.png" alt="لوگو">
+        <span>حقوق محفوظ است</span>
+    </div>
+
     <script>
         // تنظیمات بازی
         const game = document.getElementById('game');
         const scoreDisplay = document.getElementById('score');
-        const gameOverDisplay = document.getElementById('game-over');
+        const gameOverDialog = document.getElementById('gameOverDialog');
         const restartButton = document.getElementById('restartButton');
-        const speedControl = document.getElementById('speedControl');
 
-        let snake = [{ x: 10, y: 10 }]; // موقعیت اولیه مار
-        let direction = { x: 0, y: 0 }; // جهت حرکت مار
-        let star = { x: 5, y: 5 }; // موقعیت ستاره
-        let specialStar = null; // موقعیت ستاره ویژه
+        let snake = [{ x: 10, y: 10 }];
+        let direction = { x: 0, y: 0 };
+        let star = { x: 5, y: 5 };
+        let specialStar = null;
         let score = 0;
         let gameOver = false;
-        let speed = 200; // سرعت اولیه مار
+        let speed = 200; // سرعت پیش‌فرض: متوسط
         let interval;
 
         // ایجاد ستاره
@@ -189,21 +184,20 @@
 
         // ایجاد ستاره ویژه
         function createSpecialStar() {
-            if (specialStar) return; // اگر ستاره ویژه وجود دارد، جدید ایجاد نکن
+            if (specialStar) return;
             specialStar = {
                 x: Math.floor(Math.random() * 20),
                 y: Math.floor(Math.random() * 20),
-                endTime: Date.now() + 5000 // 5 ثانیه بعد
+                endTime: Date.now() + 5000
             };
             setTimeout(() => {
-                specialStar = null; // ستاره ویژه را حذف کن
-                renderGame(); // بازی را دوباره رندر کن
+                specialStar = null;
+                renderGame();
             }, 5000);
         }
 
         // تشخیص برخورد
         function checkCollision() {
-            // برخورد با خود مار
             for (let i = 1; i < snake.length; i++) {
                 if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) {
                     return true;
@@ -242,8 +236,7 @@
             // بررسی برخورد
             if (checkCollision()) {
                 gameOver = true;
-                gameOverDisplay.style.display = 'block';
-                restartButton.style.display = 'block';
+                gameOverDialog.style.display = 'block';
                 clearInterval(interval);
             }
 
@@ -297,21 +290,10 @@
             score = 0;
             scoreDisplay.textContent = `امتیاز: ${score}`;
             gameOver = false;
-            gameOverDisplay.style.display = 'none';
-            restartButton.style.display = 'none';
+            gameOverDialog.style.display = 'none';
             createStar();
             clearInterval(interval);
             interval = setInterval(moveSnake, speed);
-        });
-
-        // تنظیم سرعت
-        speedControl.addEventListener('click', () => {
-            const newSpeed = prompt('سرعت مار را تنظیم کنید (عدد کمتر = سریع‌تر):', speed);
-            if (newSpeed && !isNaN(newSpeed)) {
-                speed = parseInt(newSpeed);
-                clearInterval(interval);
-                interval = setInterval(moveSnake, speed);
-            }
         });
 
         // شروع بازی
