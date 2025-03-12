@@ -18,6 +18,30 @@
             flex-direction: column;
         }
 
+                /* استایل برای container عکس */
+        .logo-container {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        /* استایل برای عکس */
+        .logo {
+            width: 45px; /* اندازه عرض عکس */
+            height: 45px; /* اندازه ارتفاع عکس */
+            border-radius: 50%; /* اگر می‌خوای عکس گرد باشه */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3); /* سایه برای عکس */
+            transition: transform 0.3s ease; /* انیمیشن هنگام hover */
+        }
+
+        /* انیمیشن هنگام hover روی عکس */
+        .logo:hover {
+            transform: scale(1.1); /* بزرگ‌تر شدن عکس */
+        }
+
+
         #game {
             position: relative;
             width: 400px;
@@ -117,6 +141,10 @@
     </style>
 </head>
 <body>
+        <!-- عکس بالای صفحه -->
+    <div class="logo-container">
+        <img src="https://s33.picofile.com/file/8483368568/1741771039690.png" alt="لوگو بازی" class="logo">
+    </div>
     <div id="game"></div>
     <div id="score">امتیاز: 0</div>
     <div id="game-over">بازی تمام شد!</div>
